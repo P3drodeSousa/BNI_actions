@@ -1,0 +1,42 @@
+name: Deploy_symfony_react
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-js-production:
+    runs-on: ubuntu-latest
+    name: Js-to-production
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: NPM Build
+        run: |
+          npm install
+          npm run build
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: assets
+          path: public
+          retention-days: 3
+
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deyploing
+    needs: [build-js-production]
+
+    env:
+      SSHPASS: ${{ secrets.APP_PASS }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: APT UPDATE and INSTALL SSHPASS
+        run: sudo apt update && sudo apt install sshpass
+
+      - name: deploys to server
+        run:
+          sshpass -e ssh -o stricthostkeychecking=no ${{ secrets.APP_USER }}@${{ secrets.APP_HOST }}
+          "pwd"
